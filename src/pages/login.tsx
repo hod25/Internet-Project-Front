@@ -36,15 +36,17 @@ const Login: FC = () => {
         {formState.errors.password && <p>{formState.errors.password.message}</p>}
 
         <button type="submit">Login</button>
-        <p>
-          Don't have an account? <Link to="/register">Register</Link>
-        </p>
 
+        <p>Or login with:</p>
         <GoogleLogin
           onSuccess={() => navigate("/profile")}
           onError={() => console.log("Google Login Error")}
           useOneTap
         />
+                <p>
+          Don't have an account? <Link to="/register">Register</Link>
+        </p>
+
       </div>
     </form>
   );
