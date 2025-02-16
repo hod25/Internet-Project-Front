@@ -7,8 +7,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faImage } from "@fortawesome/free-solid-svg-icons";
 import "../styles/RegistrationForm.css";
 import { Link } from "react-router-dom";
-// import "../styles/AuthForm.css";
-
+import { GoogleLogin } from "@react-oauth/google";
 
 const schema = z.object({
   email: z.string().email("Invalid email address"),
@@ -26,6 +25,11 @@ const RegistrationForm: FC = () => {
 
   const onSubmit = (data: FormData) => {
     console.log("Form Submitted:", data);
+  };
+
+  const handleGoogleSignup = (response: any) => {
+    console.log("Google Signup Response:", response);
+    // כאן תוכל לטפל ברישום עם גוגל, לשלוח לשרת ולעשות אימות
   };
 
   return (
@@ -53,6 +57,9 @@ const RegistrationForm: FC = () => {
         {formState.errors.password && <p>{formState.errors.password.message}</p>}
 
         <button type="submit">Register</button>
+
+        <p>Or sign up with:</p>
+        <GoogleLogin onSuccess={handleGoogleSignup} onError={() => console.log("Google Signup Error")} />
 
         <p>
           Already have an account? <Link to="/login">Login</Link>
