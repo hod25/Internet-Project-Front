@@ -42,7 +42,7 @@ const EditProfilePage: FC = () => {
             onChange={(e) => setFile(e.target.files?.[0] || null)}
           />
         </label>
-      </div>
+
       
       <label>Username:</label>
       <input {...register("username")} type="text" />
@@ -53,6 +53,7 @@ const EditProfilePage: FC = () => {
       {formState.errors.bio && <p>{formState.errors.bio.message}</p>}
 
       <button type="submit">Save Changes</button>
+      </div>
     </form>
   );
 };

@@ -5,56 +5,90 @@
     align-items: center;
     justify-content: center;
     height: 100vh;
-    background-color: #f4f4f4;
-  }
-  
-  .edit-profile-form {
+    background-color: #f3f4f6;
+}
+
+.edit-profile-form {
     background: white;
-    padding: 20px;
+    padding: 2rem;
     border-radius: 10px;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-    width: 300px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    width: 350px;
+    text-align: center;
     display: flex;
     flex-direction: column;
     align-items: center;
-  }
-  
-  .edit-profile-form label {
-    width: 100%;
+}
+
+.edit-profile-header {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.edit-profile-avatar {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 3px solid #4a90e2;
+}
+
+.edit-profile-upload {
+    position: relative;
+    display: inline-block;
+    cursor: pointer;
     margin-top: 10px;
+}
+
+.edit-profile-upload input {
+    display: none;
+}
+
+.edit-profile-upload svg {
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    background: #3b82f6;
+    padding: 10px;
+    border-radius: 50%;
+    color: white;
+}
+
+.edit-profile-form label {
     font-weight: bold;
-  }
-  
-  .edit-profile-form input,
-  .edit-profile-form textarea {
+    margin-top: 10px;
+    text-align: center;
     width: 100%;
-    padding: 8px;
+}
+
+.edit-profile-form input,
+.edit-profile-form textarea {
+    width: 100%;
+    max-width: 280px;
+    padding: 10px;
     margin-top: 5px;
     border: 1px solid #ccc;
     border-radius: 5px;
-  }
-  
-  .edit-profile-form button {
-    margin-top: 15px;
-    padding: 10px;
+    font-size: 16px;
+    text-align: center;
+}
+
+.edit-profile-form button {
     width: 100%;
-    background-color: #007bff;
+    max-width: 280px;
+    padding: 12px;
+    background: #3b82f6;
     color: white;
     border: none;
     border-radius: 5px;
+    margin-top: 15px;
     cursor: pointer;
+    transition: background 0.3s;
     font-size: 16px;
-  }
-  
-  .edit-profile-form button:hover {
-    background-color: #0056b3;
-  }
-  
-  .profile-avatar-preview {
-    width: 80px;
-    height: 80px;
-    border-radius: 50%;
-    margin-top: 10px;
-    object-fit: cover;
-  }
-  
+}
+
+.edit-profile-form button:hover {
+    background: #2563eb;
+}
