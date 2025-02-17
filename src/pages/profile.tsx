@@ -15,7 +15,7 @@ const Profile: FC = () => {
         <div className="profile-info">
           <h2>John Doe</h2>
           <p>@johndoe</p>
-          <p className="bio">Web Developer | Tech Enthusiast | Coffee Lover</p>
+          <p className="bio"> Vegan | Gluten | Coffee Lover</p>
         </div>
         <Link to="/edit-profile">
         <button className="edit-profile">Edit Profile</button>
