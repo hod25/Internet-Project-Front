@@ -20,7 +20,7 @@ const Home: FC = () => {
   useEffect(() => {
     const fetchRecipes = async () => {
       try {
-        const response = await axios.get("http://localhost:4040/api/recipes");
+        const response = await fetch("http://localhost:4040/recipe", { mode: "no-cors" });
         setRecipes(response.data);
       } catch (error) {
         console.error("Error fetching recipes:", error);
@@ -30,11 +30,6 @@ const Home: FC = () => {
     fetchRecipes();
   }, []);
   
-  const handleLogout = () => {
-    console.log("User logged out");
-    navigate("/login");
-  };
-
   const handlePostSubmit = async () => {
     if (newPost.trim() || image) {
       try {
@@ -44,11 +39,19 @@ const Home: FC = () => {
           formData.append("image", image);
         }
   
-        const response = await axios.post("http://localhost:4040/api/recipes", {
-          content: newPost,
-          image: image ? URL.createObjectURL(image) : undefined,
-          tags: [], // אם יש לך תגיות, תוכל להוסיף כאן
-        });
+        const response = await axios.post(
+          "http://localhost:4040/recipe",
+          {
+            content: newPost,
+            image: image ? URL.createObjectURL(image) : undefined,
+            tags: [],
+          },
+          {
+            headers: {
+              "Access-Control-Allow-Origin": "*",
+            },
+          }
+        );
   
         setRecipes([response.data, ...recipes]);
         setNewPost("");
@@ -56,7 +59,9 @@ const Home: FC = () => {
       } catch (error) {
         console.error("Error creating post:", error);
       }
+    
     }
+
   };
   
   return (
@@ -64,7 +69,7 @@ const Home: FC = () => {
       {/* Sidebar */}
       <aside className="sidebar">
         <Link to="/profile">Profile</Link>
-        <button onClick={handleLogout} className="logout-button">Logout</button>
+        {/* <button onClick={handleLogout} className="logout-button">Logout</button> */}
       </aside>
 
       {/* Feed Section */}
@@ -90,12 +95,12 @@ const Home: FC = () => {
           </div>
           <button onClick={handlePostSubmit} className="post-button">Post</button>
         </div>
-        {recipes.map((recipe) => (
+        {/* {recipes.map((recipe) => (
           <div key={recipe.id} className="post">
             {recipe.image && <img src={recipe.image} alt="Post" className="post-image" />}
             <p>{recipe.content}</p>
           </div>
-        ))}
+        ))} */}
       </main>
     </div>
   );

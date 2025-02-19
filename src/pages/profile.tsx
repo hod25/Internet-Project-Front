@@ -1,12 +1,12 @@
 import { FC } from "react";
-import { useNavigate } from "react-router-dom";
+// import { useNavigate } from "react-router-dom";
 import "../styles/profile.css";
 import avatar from "../assets/avatar.png";
 import { Link } from "react-router-dom";
 
 
 const Profile: FC = () => {
-  const navigate = useNavigate();
+  // const navigate = useNavigate();
 
   return (
     <div className="profile-container">

@@ -18,7 +18,7 @@ type FormData = z.infer<typeof schema>;
 
 const EditProfilePage: FC = () => {
   const [file, setFile] = useState<File | null>(null);
-  const { register, handleSubmit, formState, setValue } = useForm<FormData>({
+  const { register, handleSubmit, formState } = useForm<FormData>({
     resolver: zodResolver(schema),
   });
 
