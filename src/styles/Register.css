@@ -73,3 +73,24 @@ button:hover {
     border-radius: 50%;
     color: white;
 }
+
+.register-upload {
+    position: relative;
+    display: inline-block;
+    cursor: pointer;
+    margin-top: 10px;
+}
+
+.register-upload input {
+    display: none;
+}
+
+.register-upload svg {
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    background: #3b82f6;
+    padding: 10px;
+    border-radius: 50%;
+    color: white;
+}
