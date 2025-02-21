@@ -41,7 +41,7 @@ const RegisterPage: FC = () => {
       formData.append("profile", data.profile || "");
       formData.append("allergies", JSON.stringify(data.allergies || []));
 
-      const response = await axios.post("/api/register", formData, {
+      const response = await axios.post("/users/register", formData, {
         headers: {
           "Content-Type": "multipart/form-data",
         },
@@ -53,10 +53,10 @@ const RegisterPage: FC = () => {
     }
   };
 
-  const handleGoogleSignup = (response: any) => {
-    console.log("Google Signup Response:", response);
-    // Handle Google signup here
-  };
+  // const handleGoogleSignup = (response: any) => {
+  //   console.log("Google Signup Response:", response);
+  //   // Handle Google signup here
+  // };
 
   const allergyOptions = [
     "Vegetarian",
@@ -125,7 +125,12 @@ const RegisterPage: FC = () => {
         <button type="submit">Register</button>
 
         <p>Or sign up with:</p>
-        <GoogleLogin onSuccess={handleGoogleSignup} onError={() => console.log("Google Signup Error")} />
+        <GoogleLogin
+          onSuccess={(CredentialResponse) => {
+            console.log(CredentialResponse);
+          }}
+          onError={() => console.log("Google Signup Error")}
+        />
         <p>
           Already have an account? <Link to="/login">Login</Link>
         </p>
