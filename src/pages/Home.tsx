@@ -40,9 +40,14 @@ const Home: FC = () => {
       try {
         const response = await fetch("http://localhost:4040/recipe");
         const data = await response.json();
-        setRecipes(data);
+        if (Array.isArray(data)) {
+          setRecipes(data);
+        } else {
+          setRecipes([]);
+        }
       } catch (error) {
         console.error("Error fetching recipes:", error);
+        setRecipes([]);
       }
     };
 
