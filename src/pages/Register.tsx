@@ -30,6 +30,7 @@ const RegisterPage: FC = () => {
   });
 
   const onSubmit = async (data: FormData) => {
+    console.log("Submitting form data:", data); // בדיקה אם הקוד בכלל רץ
     try {
       const formData = new FormData();
       formData.append("email", data.email);
@@ -40,18 +41,19 @@ const RegisterPage: FC = () => {
       if (data.img) formData.append("img", data.img);
       formData.append("profile", data.profile || "");
       formData.append("allergies", JSON.stringify(data.allergies || []));
-
-      const response = await axios.post("/users/register", formData, {
+  
+      const response = await axios.post("http://localhost:4040/users/register", formData, {
         headers: {
           "Content-Type": "multipart/form-data",
         },
       });
-
+  
       console.log("User registered:", response.data);
     } catch (error) {
       console.error("Error registering user:", error);
     }
   };
+  
 
   // const handleGoogleSignup = (response: any) => {
   //   console.log("Google Signup Response:", response);
