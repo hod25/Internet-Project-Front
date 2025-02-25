@@ -2,6 +2,7 @@ import { FC } from "react";
 import "../styles/profile.css";
 import avatar from "../assets/avatar.png";
 import { Link } from "react-router-dom";
+import Sidebar from "../components/Sidebar"; // Adjust the path as necessary
 
 const Profile: FC = () => {
   const username = "John Doe"; // שם המשתמש מהשרת 
@@ -9,6 +10,7 @@ const Profile: FC = () => {
   const allergies = ["Vegetarian", "Gluten-Free"]; // התגיות מהשרת
   return (
     <div className="profile-container">
+    <Sidebar /> 
       <div className="profile-header">
         <img src={avatar} alt="Profile" className="profile-avatar" />
         <div className="profile-info">

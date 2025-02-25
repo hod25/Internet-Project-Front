@@ -4,6 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import z from "zod";
 import "../styles/EditProfile.css";
 import avatar from "../assets/avatar.png";
+import Sidebar from "../components/Sidebar"; // Add this line
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faImage } from "@fortawesome/free-solid-svg-icons";
 
@@ -36,49 +37,54 @@ const EditProfilePage: FC = () => {
   ];
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="edit-profile-container">
-      <div className="edit-profile-header">
-        <img
-          src={file ? URL.createObjectURL(file) : avatar}
-          alt="Profile Avatar"
-          className="edit-profile-avatar"
-        />
-        <label className="edit-profile-upload">
-          <FontAwesomeIcon icon={faImage} />
-          <input
-            {...register("img")}
-            type="file"
-            accept="image/jpeg, image/png"
-            onChange={(e) => setFile(e.target.files?.[0] || null)}
-          />
-        </label>
-
-        <label>Username:</label>
-        <input {...register("username")} type="text" />
-        {formState.errors.username && <p>{formState.errors.username.message}</p>}
-
-        <label>Bio:</label>
-        <textarea {...register("bio")} rows={3} />
-        {formState.errors.bio && <p>{formState.errors.bio.message}</p>}
-
-        <label>Allergies/Preferences:</label>
-        <div className="allergies-container">
-          {allergyOptions.map((option) => (
-            <div key={option} className="allergy-option">
+    <div className="edit-profile-container">
+      <Sidebar /> {/* Ensure Sidebar is positioned correctly */}
+      <div className="edit-profile-content"> Wrap form in a content div
+        <form onSubmit={handleSubmit(onSubmit)} className="edit-profile-form">
+          <div className="edit-profile-header">
+            <img
+              src={file ? URL.createObjectURL(file) : avatar}
+              alt="Profile Avatar"
+              className="edit-profile-avatar"
+            />
+            <label className="edit-profile-upload">
+              <FontAwesomeIcon icon={faImage} />
               <input
-                {...register("allergies")}
-                type="checkbox"
-                value={option}
-                id={option}
+                {...register("img")}
+                type="file"
+                accept="image/jpeg, image/png"
+                onChange={(e) => setFile(e.target.files?.[0] || null)}
               />
-              <label htmlFor={option}>{option}</label>
-            </div>
-          ))}
-        </div>
+            </label>
 
-        <button type="submit">Save Changes</button>
+            <label>Username:</label>
+            <input {...register("username")} type="text" />
+            {formState.errors.username && <p>{formState.errors.username.message}</p>}
+
+            <label>Bio:</label>
+            <textarea {...register("bio")} rows={3} />
+            {formState.errors.bio && <p>{formState.errors.bio.message}</p>}
+
+            <label>Allergies/Preferences:</label>
+            <div className="allergies-container">
+              {allergyOptions.map((option) => (
+                <div key={option} className="allergy-option">
+                  <input
+                    {...register("allergies")}
+                    type="checkbox"
+                    value={option}
+                    id={option}
+                  />
+                  <label htmlFor={option}>{option}</label>
+                </div>
+              ))}
+            </div>
+
+            <button type="submit">Save Changes</button>
+          </div>
+        </form>
       </div>
-    </form>
+    </div>
   );
 };
 

@@ -1,11 +1,12 @@
 .edit-profile-container {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    height: 100vh;
-    background-color: #f3f4f6;
-  }
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 20px;
+  background-color: #f4f6f9;
+  height: 100vh;
+  font-family: 'Arial', sans-serif;
+}
   
   .edit-profile-form {
     background: white;
@@ -134,4 +135,6 @@
   .allergy-option input:checked + label:hover {
     background-color: #2563eb;
   }
+
   
+  ;;
