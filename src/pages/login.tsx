@@ -4,6 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import z from "zod";
 import { Link, useNavigate } from "react-router-dom";
 import { GoogleLogin } from "@react-oauth/google";
+import axios from "axios"; // ✅ ייבוא axios
 import "../styles/login.css";
 
 const schema = z.object({
@@ -15,13 +16,20 @@ type FormData = z.infer<typeof schema>;
 
 const Login: FC = () => {
   const navigate = useNavigate();
-  const { register, handleSubmit, formState } = useForm<FormData>({
+  const { register, handleSubmit, formState, setError } = useForm<FormData>({
     resolver: zodResolver(schema),
   });
 
-  const onSubmit = (data: FormData) => {
-    console.log("Login Data:", data);
-    navigate("/profile");
+  const onSubmit = async (data: FormData) => {
+    try {
+      const response = await axios.post("http://localhost:3000/users/login", data);
+
+      localStorage.setItem("token", response.data.token); // ✅ שמירת הטוקן אם צריך
+      navigate("/profile"); // ✅ מעבר לדף הפרופיל אחרי התחברות מוצלחת
+    } catch (error: any) {
+      console.error("Login Error:", error.response?.data?.message || "Login failed");
+      setError("password", { message: "Invalid email or password" }); // ✅ הצגת הודעת שגיאה
+    }
   };
 
   return (
@@ -43,10 +51,8 @@ const Login: FC = () => {
           onError={() => console.log("Google Login Error")}
           useOneTap
         />
-                <p>
-          Don't have an account? <Link to="/register">Register</Link>
-        </p>
 
+        <p>Don't have an account? <Link to="/register">Register</Link></p>
       </div>
     </form>
   );
