@@ -4,7 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import z from "zod";
 import { Link, useNavigate } from "react-router-dom";
 import { GoogleLogin } from "@react-oauth/google";
-import axios from "axios"; // ✅ ייבוא axios
+import axios from "axios"; 
 import "../styles/login.css";
 
 const schema = z.object({
@@ -22,7 +22,7 @@ const Login: FC = () => {
 
   const onSubmit = async (data: FormData) => {
     try {
-      const response = await axios.post("http://localhost:3000/users/login", data);
+      const response = await axios.post("http://localhost:4040/users/login", data);
 
       localStorage.setItem("token", response.data.token); // ✅ שמירת הטוקן אם צריך
       navigate("/profile"); // ✅ מעבר לדף הפרופיל אחרי התחברות מוצלחת
