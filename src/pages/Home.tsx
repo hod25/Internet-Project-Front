@@ -2,7 +2,7 @@ import { FC, useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import "../styles/Home.css";
 import axios from "axios";
-import Sidebar from "../components/Sidebar"; // ✅ ייבוא התפריט הצדדי
+import Sidebar from "../components/Sidebar"; 
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faImage } from "@fortawesome/free-solid-svg-icons";
 import { useForm, FormProvider } from "react-hook-form";
@@ -25,17 +25,26 @@ const Home: FC = () => {
   const [title, setTitle] = useState("");
   const [image, setImage] = useState<File | null>(null);
   const [selectedAllergies, setSelectedAllergies] = useState<string[]>([]);
+  const [error, setError] = useState<string | null>(null);
   const methods = useForm();
 
   useEffect(() => {
-    const fetchRecipes = async () => {
+    const fetchRecipes = async (retryCount = 0) => {
       try {
         const response = await fetch("http://localhost:4040/recipe");
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
         const data = await response.json();
         setRecipes(Array.isArray(data) ? data : []);
+        setError(null);
       } catch (error) {
         console.error("Error fetching recipes:", error);
         setRecipes([]);
+        setError("Failed to fetch recipes. Please try again later.");
+        if (retryCount < 3) {
+          setTimeout(() => fetchRecipes(retryCount + 1), 3000);
+        }
       }
     };
     fetchRecipes();
@@ -75,9 +84,10 @@ const Home: FC = () => {
   return (
     <FormProvider {...methods}>
       <div className="home-container">
-        <Sidebar /> {/* ✅ הוספת ה-Sidebar כאן */} 
+        <Sidebar />  
         <main className="feed">
           <h2>Feed</h2>
+          {error && <div className="error-message">{error}</div>}
           <div className="create-post">
             <input
               className="post-title-input"
