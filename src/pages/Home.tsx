@@ -61,7 +61,7 @@ const Home: FC = () => {
           formData.append("image", image);
         }
         formData.append("likes", "0");
-        formData.append("owner", "user1");
+        formData.append("owner", "user1"); // Adjust this to use the actual user information
 
         const response = await axios.post(
           "http://localhost:4040/recipe",
