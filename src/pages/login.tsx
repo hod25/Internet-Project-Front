@@ -22,7 +22,12 @@ const Login: FC = () => {
 
   const onSubmit = async (data: FormData) => {
     try {
-      const response = await axios.post("http://localhost:4040/users/login", data);
+      const postData = {
+        email: data.email.trim(),
+        password: data.password.trim()
+      };
+      const response = await axios.post("http://localhost:4040/auth/login",postData,
+        { headers: { "Content-Type": "application/json" } });
 
       localStorage.setItem("token", response.data.token); // ✅ שמירת הטוקן אם צריך
       navigate("/profile"); // ✅ מעבר לדף הפרופיל אחרי התחברות מוצלחת

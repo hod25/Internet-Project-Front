@@ -51,55 +51,47 @@ const Home: FC = () => {
   }, []);
 
   const handlePostSubmit = async () => {
-    if (title.trim() && (newPost.trim() || image)) {
-      try {
-        const formData = new FormData();
-        formData.append("title", title);
-        const ingredientsArray = newPost
-        .split("\n") // פיצול לפי שורות חדשות
-        .map(ingredient => ingredient.trim()) // ניקוי רווחים מיותרים
-        .filter(ingredient => ingredient); // הסרת שורות ריקות
-              if (ingredientsArray.length === 0) {
-          throw new Error("Ingredients array cannot be empty");
-        }
-        formData.append("ingredients", JSON.stringify(ingredientsArray));
-        formData.append("tags", JSON.stringify(selectedAllergies));
-        if (image) {
-          formData.append("image", image);
-        }
-        formData.append("likes", "0");
-        formData.append("owner", "user1"); // Adjust this to use the actual user information
-
-        // Debugging: Log the formData entries
-        for (let pair of formData.entries()) {
-          console.log(pair[0] + ': ' + pair[1]);
-        }
-
-        const response = await axios.post(
-          "http://localhost:4040/recipe/",
-          formData,
-          { headers: { "Content-Type": "multipart/form-data" } }
-        );
-
-        setRecipes([response.data, ...recipes]);
-        setTitle("");
-        setNewPost("");
-        setImage(null);
-        setSelectedAllergies([]);
-        methods.reset();
-      } catch (error) {
-        if (axios.isAxiosError(error) && error.response) {
-          console.error("Error creating post:", error.response.data);
-        } else if (error instanceof Error) {
-          console.error("Error creating post:", error.message);
-        } else {
-          console.error("An unexpected error occurred:", error);
-        }
-      }
-    } else {
+    const trimmedTitle = title.trim();
+    const trimmedPost = newPost.trim();
+  
+    if (!trimmedTitle || (!trimmedPost && !image)) {
       console.error("Title and either post content or image are required.");
+      return;
+    }
+  
+    try {
+      const postData = {
+        title: trimmedTitle,
+        ingredients: trimmedPost
+          .split("\n")
+          .map(ingredient => ingredient.trim())
+          .filter(ingredient => ingredient),
+        tags: selectedAllergies || [],
+        likes: 0,
+        owner: "67bf367a6596d896e4ffed31"
+      };
+  
+      const response = await axios.post(
+        "http://localhost:4040/recipe/",
+        postData, // שינוי כאן
+        { headers: { "Content-Type": "application/json" } } // שינוי כאן
+      );
+  
+      setRecipes([response.data, ...recipes]);
+      setTitle("");
+      setNewPost("");
+      setImage(null);
+      setSelectedAllergies([]);
+      methods.reset();
+    } catch (error : any) {
+      if (axios.isAxiosError(error) && error.response) {
+        console.error("Error creating post:", error.response.data);
+      } else {
+        console.error("An error occurred:", error.message);
+      }
     }
   };
+  
 
   return (
     <FormProvider {...methods}>
