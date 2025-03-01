@@ -105,7 +105,6 @@ const RegisterPage: FC = () => {
 
         {/* <label>Background:</label>
         <input {...register("background")} type="text" /> */}
-
         {/* <label>Profile:</label>
         <input {...register("profile")} type="text" /> */}
 

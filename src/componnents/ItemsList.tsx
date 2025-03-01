@@ -47,7 +47,6 @@ const ItemsList: FC<ItemsListProps> = ({ title, items, onItemSelected }) => {
             <button className={'btn btn-primary'} onClick={() => { onSelect() }}>Select</button>
         </div>
     )
-
 }
 
 export default ItemsList
