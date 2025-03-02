@@ -4,7 +4,7 @@ import "../styles/Home.css";
 import axios from "axios";
 import Sidebar from "../components/Sidebar"; 
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faImage } from "@fortawesome/free-solid-svg-icons";
+import { faImage, faThumbsUp, faComment } from "@fortawesome/free-solid-svg-icons";
 import { useForm, FormProvider } from "react-hook-form";
 import AllergiesPreferences from "../components/AllergiesPreferences";
 
@@ -16,6 +16,7 @@ interface Recipe {
   tags?: string[] | null;
   owner: string;
   likes: number;
+  comments: string[];
 }
 
 const Home: FC = () => {
@@ -26,6 +27,7 @@ const Home: FC = () => {
   const [image, setImage] = useState<File | null>(null);
   const [selectedAllergies, setSelectedAllergies] = useState<string[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [comment, setComment] = useState<string>("");
   const methods = useForm();
 
   useEffect(() => {
@@ -91,7 +93,35 @@ const Home: FC = () => {
       }
     }
   };
-  
+
+  const handleLike = async (recipeId: number) => {
+    try {
+      await axios.post(`http://localhost:4040/recipe/${recipeId}/like`);
+      setRecipes((prevRecipes) =>
+        prevRecipes.map((recipe) =>
+          recipe.id === recipeId ? { ...recipe, likes: recipe.likes + 1 } : recipe
+        )
+      );
+    } catch (error) {
+      console.error("Error liking post:", error);
+    }
+  };
+
+  const handleCommentSubmit = async (recipeId: number) => {
+    if (!comment.trim()) return;
+
+    try {
+      await axios.post(`http://localhost:4040/recipe/${recipeId}/comment`, { comment });
+      setRecipes((prevRecipes) =>
+        prevRecipes.map((recipe) =>
+          recipe.id === recipeId ? { ...recipe, comments: [...recipe.comments, comment] } : recipe
+        )
+      );
+      setComment("");
+    } catch (error) {
+      console.error("Error commenting on post:", error);
+    }
+  };
 
   return (
     <FormProvider {...methods}>
@@ -149,6 +179,26 @@ const Home: FC = () => {
                 ) : (
                   <span>No tags</span>
                 )}
+              </div>
+              <div className="post-actions">
+                <button onClick={() => handleLike(recipe.id)} className="like-button">
+                  <FontAwesomeIcon icon={faThumbsUp} /> {recipe.likes}
+                </button>
+                <div className="comments-section">
+                  {recipe.comments.map((comment, index) => (
+                    <div key={index} className="comment">{comment}</div>
+                  ))}
+                  <input
+                    type="text"
+                    placeholder="Add a comment..."
+                    value={comment}
+                    onChange={(e) => setComment(e.target.value)}
+                    className="comment-input"
+                  />
+                  <button onClick={() => handleCommentSubmit(recipe.id)} className="comment-button">
+                    <FontAwesomeIcon icon={faComment} />
+                  </button>
+                </div>
               </div>
             </div>
           ))}
