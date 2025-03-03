@@ -62,11 +62,11 @@ const Home: FC = () => {
     try {
       const postData = {
         title: trimmedTitle,
-        ingredients: trimmedPost
+        ingredients: JSON.stringify(trimmedPost
           .split("\n")
           .map(ingredient => ingredient.trim())
-          .filter(ingredient => ingredient),
-        tags: selectedAllergies || [],
+          .filter(ingredient => ingredient)),
+        tags: JSON.stringify(selectedAllergies) || [],
         likes: 0,
         owner: "67bf367a6596d896e4ffed31"
       };
