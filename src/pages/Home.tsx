@@ -185,9 +185,9 @@ const Home: FC = () => {
                   <FontAwesomeIcon icon={faThumbsUp} /> {recipe.likes}
                 </button>
                 <div className="comments-section">
-                  {recipe.comments.map((comment, index) => (
+                  {/* {recipe.comments.map((comment, index) => (
                     <div key={index} className="comment">{comment}</div>
-                  ))}
+                  ))} */}
                   <input
                     type="text"
                     placeholder="Add a comment..."
