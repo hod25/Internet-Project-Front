@@ -47,6 +47,8 @@ const Home: FC = () => {
     fetchRecipes();
   }, [page]);
     
+  const [resetTrigger, setResetTrigger] = useState(false);
+
   const handlePostSubmit = async () => {
     const trimmedTitle = title.trim();
     const trimmedPost = newPost.trim();
@@ -70,16 +72,18 @@ const Home: FC = () => {
   
       const response = await axios.post(
         `${BASE_URL}/recipe/`,
-        postData, // שינוי כאן
-        { headers: { "Content-Type": "application/json" } } // שינוי כאן
+        postData,
+        { headers: { "Content-Type": "application/json" } }
       );
   
       setRecipes([response.data, ...recipes]);
       setTitle("");
       setNewPost("");
       setImage(null);
-      setSelectedAllergies([]);
+      setSelectedAllergies([]); // מאפס את האלרגיות הכלליות
       methods.reset();
+      setResetTrigger(prev => !prev); // ✅ מפעיל את האיפוס גם בתוך הקומפוננטה של האלרגיות
+  
     } catch (error : any) {
       if (axios.isAxiosError(error) && error.response) {
         console.error("Error creating post:", error.response.data);
@@ -87,7 +91,7 @@ const Home: FC = () => {
         console.error("An error occurred:", error.message);
       }
     }
-  };
+  };  
 
   const handleLike = async (recipeId: number) => {
     try {
@@ -155,16 +159,17 @@ const Home: FC = () => {
             </label>
             <label>Allergies/Preferences:</label>
             <AllergiesPreferences
-            options={[
-              "Vegetarian",
-              "Vegan",
-              "Gluten-Free",
-              "Lactose-Free",
-              "Nut Allergy",
-              "Shellfish Allergy"
-            ]}
-            onChange={setSelectedAllergies}
-/>
+              options={[
+                "Vegetarian",
+                "Vegan",
+                "Gluten-Free",
+                "Lactose-Free",
+                "Nut Allergy",
+                "Shellfish Allergy"
+              ]}
+              onChange={setSelectedAllergies}
+              resetTrigger={resetTrigger} // 🔹 מעביר את הפרופ החדש
+            />
             <button onClick={handlePostSubmit} className="post-button">Post</button>
           </div>
           
