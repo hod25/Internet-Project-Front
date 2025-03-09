@@ -7,6 +7,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faImage, faThumbsUp, faComment } from "@fortawesome/free-solid-svg-icons";
 import { useForm, FormProvider } from "react-hook-form";
 import AllergiesPreferences from "../components/AllergiesPreferences";
+import { BASE_URL } from "../config/constants";
 
 interface Recipe {
   id: number;
@@ -34,7 +35,7 @@ const Home: FC = () => {
   useEffect(() => {
     const fetchRecipes = async (retryCount = 0) => {
       try {
-        const response = await fetch(`http://localhost:4040/recipe?page=${page}&limit=10`);
+        const response = await fetch(`${BASE_URL}/recipe?page=${page}&limit=10`);
         const data = await response.json();
         console.log("Fetched data:", data); // בדוק מה מחזיר ה-API
         setRecipes(Array.isArray(data.recipes) ? data.recipes : []);
@@ -68,7 +69,7 @@ const Home: FC = () => {
       };
   
       const response = await axios.post(
-        "http://localhost:4040/recipe/",
+        `${BASE_URL}/recipe/`,
         postData, // שינוי כאן
         { headers: { "Content-Type": "application/json" } } // שינוי כאן
       );
@@ -90,7 +91,7 @@ const Home: FC = () => {
 
   const handleLike = async (recipeId: number) => {
     try {
-      await axios.post(`http://localhost:4040/recipe/${recipeId}/like`);
+      await axios.post(`${BASE_URL}/recipe/${recipeId}/like`);
       setRecipes((prevRecipes) =>
         prevRecipes.map((recipe) =>
           recipe.id === recipeId ? { ...recipe, likes: recipe.likes + 1 } : recipe
@@ -105,7 +106,7 @@ const Home: FC = () => {
     if (!comment.trim()) return;
 
     try {
-      await axios.post(`http://localhost:4040/recipe/${recipeId}/comment`, { comment });
+      await axios.post(`${BASE_URL}/recipe/${recipeId}/comment`, { comment });
       setRecipes((prevRecipes) =>
         prevRecipes.map((recipe) =>
           recipe.id === recipeId ? { ...recipe, comments: [...recipe.comments, comment] } : recipe
@@ -170,7 +171,7 @@ const Home: FC = () => {
           {recipes.map((recipe) => (
             <div key={recipe.id} className="post">
               <h3>{recipe.title}</h3>
-              {recipe.image && <img src={`http://localhost:4040/${recipe.image}`} alt="Post" className="post-image" />}
+              {recipe.image && <img src={`${BASE_URL}/${recipe.image}`} alt="Post" className="post-image" />}
               <div className="tags">
                 {recipe.tags && recipe.tags.length ? (
                   recipe.tags.map((tag, index) => (
