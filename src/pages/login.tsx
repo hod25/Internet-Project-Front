@@ -6,6 +6,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { GoogleLogin } from "@react-oauth/google";
 import axios from "axios"; 
 import "../styles/login.css";
+import { BASE_URL } from "../config/constants";
 
 const schema = z.object({
   email: z.string().email("Invalid email address"),
@@ -24,16 +25,25 @@ const Login: FC = () => {
     try {
       const postData = {
         email: data.email.trim(),
-        password: data.password.trim()
+        password: data.password.trim(),
       };
-      const response = await axios.post("http://localhost:4040/auth/login",postData,
-        { headers: { "Content-Type": "application/json" } });
 
-      localStorage.setItem("token", response.data.token); // ✅ שמירת הטוקן אם צריך
-      navigate("/profile"); // ✅ מעבר לדף הפרופיל אחרי התחברות מוצלחת
+      const response = await axios.post(BASE_URL + "/auth/login", postData, {
+        headers: { "Content-Type": "application/json" },
+      });
+
+      console.log("Login Response:", response.data); // 🔍 בדיקה שהשרת מחזיר נתונים
+
+      if (response.data.token) {
+        localStorage.setItem("token", response.data.token);
+        console.log("Token saved:", localStorage.getItem("token")); // 🔍 בדיקה אם הטוקן נשמר
+        navigate("/profile");
+      } else {
+        console.error("No token received from server");
+      }
     } catch (error: any) {
       console.error("Login Error:", error.response?.data?.message || "Login failed");
-      setError("password", { message: "Invalid email or password" }); // ✅ הצגת הודעת שגיאה
+      setError("password", { message: "Invalid email or password" });
     }
   };
 
@@ -52,7 +62,16 @@ const Login: FC = () => {
 
         <p>Or login with:</p>
         <GoogleLogin
-          onSuccess={() => navigate("/profile")}
+          onSuccess={(response) => {
+            const token = response.credential;
+            if (token) {
+              localStorage.setItem("token", token);
+              console.log("Google Token saved:", localStorage.getItem("token")); // 🔍 בדיקה אם הטוקן נשמר
+              navigate("/profile");
+            } else {
+              console.error("No token received from Google");
+            }
+          }}
           onError={() => console.log("Google Login Error")}
           useOneTap
         />

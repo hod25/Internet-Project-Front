@@ -4,8 +4,8 @@ import avatar from "../assets/avatar.png";
 import { Link } from "react-router-dom";
 import Sidebar from "../components/Sidebar";
 import axios from "axios";
+import { BASE_URL } from "../config/constants";
 
-const baseUrl = "http://localhost:4040";
 const Profile: FC = () => {
   const [user, setUser] = useState<{ name: string; bio: string; allergies: string[]; img?: string }>({
     name: "",
@@ -17,12 +17,23 @@ const Profile: FC = () => {
   useEffect(() => {
     const fetchUserProfile = async () => {
       try {
-        const response = await axios.get(baseUrl + "/users/me", { withCredentials: true }); // Fetch the logged-in user's profile
-        setUser(response.data);
+          const token = localStorage.getItem("token"); // Ensure you're using the correct key
+          if (!token) {
+              console.error("No token found, user might be logged out.");
+              return;
+          }
+  
+          const response = await axios.get(`${BASE_URL}/users/me`, {
+              headers: { Authorization: `Bearer ${token}` }, // Attach token to Authorization header
+              withCredentials: true, // Ensure credentials (cookies) are sent
+          });
+  
+          setUser(response.data); // Set user data
       } catch (error) {
-        console.error("Error fetching user profile:", error);
+          console.error("Error fetching user profile:", error); // Log error for debugging
       }
-    };
+  };
+  
 
     fetchUserProfile();
   }, []); // Empty dependency array to run only once
