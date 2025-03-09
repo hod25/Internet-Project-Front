@@ -20,7 +20,6 @@ interface Recipe {
 }
 
 const Home: FC = () => {
-  // const navigate = useNavigate();
   const [recipes, setRecipes] = useState<Recipe[]>([]);
   const [newPost, setNewPost] = useState("");
   const [title, setTitle] = useState("");
@@ -29,29 +28,24 @@ const Home: FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [comment, setComment] = useState<string>("");
   const methods = useForm();
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
 
   useEffect(() => {
     const fetchRecipes = async (retryCount = 0) => {
       try {
-        const response = await fetch("http://localhost:4040/recipe");
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
+        const response = await fetch(`http://localhost:4040/recipe?page=${page}&limit=10`);
         const data = await response.json();
-        setRecipes(Array.isArray(data) ? data : []);
-        setError(null);
+        console.log("Fetched data:", data); // בדוק מה מחזיר ה-API
+        setRecipes(Array.isArray(data.recipes) ? data.recipes : []);
+        setTotalPages(data.totalPages || 1);
       } catch (error) {
         console.error("Error fetching recipes:", error);
-        setRecipes([]);
-        setError("Failed to fetch recipes. Please try again later.");
-        if (retryCount < 3) {
-          setTimeout(() => fetchRecipes(retryCount + 1), 3000);
-        }
       }
     };
     fetchRecipes();
-  }, []);
-
+  }, [page]);
+    
   const handlePostSubmit = async () => {
     const trimmedTitle = title.trim();
     const trimmedPost = newPost.trim();
@@ -123,6 +117,12 @@ const Home: FC = () => {
     }
   };
 
+  const handlePageChange = (newPage: number) => {
+    if (newPage > 0 && newPage <= totalPages) {
+      setPage(newPage);
+    }
+  };
+
   return (
     <FormProvider {...methods}>
       <div className="home-container">
@@ -185,9 +185,6 @@ const Home: FC = () => {
                   <FontAwesomeIcon icon={faThumbsUp} /> {recipe.likes}
                 </button>
                 <div className="comments-section">
-                  {/* {recipe.comments.map((comment, index) => (
-                    <div key={index} className="comment">{comment}</div>
-                  ))} */}
                   <input
                     type="text"
                     placeholder="Add a comment..."
@@ -202,6 +199,15 @@ const Home: FC = () => {
               </div>
             </div>
           ))}
+          <div className="pagination">
+            <button onClick={() => handlePageChange(page - 1)} disabled={page === 1}>
+              Previous
+            </button>
+            <span>Page {page} of {totalPages}</span>
+            <button onClick={() => handlePageChange(page + 1)} disabled={page === totalPages}>
+              Next
+            </button>
+          </div>
         </main>
       </div>
     </FormProvider>
