@@ -6,9 +6,11 @@ const DynamicSidebar = () => {
   const navigate = useNavigate();
 
   const handleLogout = () => {
-    localStorage.removeItem("userToken");
+    localStorage.clear();
     navigate("/login");
+    window.location.reload(); // מרענן את הדף כדי לוודא שהמצב מתאפס
   };
+  
 
   return (
     <aside className="sidebar">
