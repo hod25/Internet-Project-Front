@@ -6,6 +6,7 @@ import Profile from "./pages/profile";
 import Register from "./pages/Register";
 // import Profile from "./pages/Profile";
 import EditProfilePage from "./pages/EditProfile";
+import RecipeDetails from "./pages/RecipeDetails"; // import RecipeDetails component
 
 function App() {
     return (
@@ -18,6 +19,7 @@ function App() {
                 <Route path="/register" element={<Register />} />
                 {/* <Route path="/profile" element={<Profile />} /> */}
                 <Route path="/edit-profile" element={<EditProfilePage />} />
+                <Route path="/post/:id" element={<RecipeDetails />} /> {/* add route for RecipeDetails */}
             </Routes>
         </Router>
     );

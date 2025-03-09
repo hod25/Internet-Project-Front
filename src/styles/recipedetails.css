@@ -1,0 +1,97 @@
+/* PostDetails.css */
+
+.post-details-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px;
+    background-color: #f4f6f9;
+    min-height: 100vh;
+    font-family: 'Arial', sans-serif;
+  }
+  
+  .post-card {
+    background: white;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    width: 60%;
+    max-width: 800px;
+  }
+  
+  .post-card h2 {
+    font-size: 24px;
+    color: #333;
+    border-bottom: 2px solid #007bff;
+    padding-bottom: 10px;
+    margin-bottom: 15px;
+  }
+  
+  .post-card img {
+    width: 100%;
+    height: auto;
+    border-radius: 10px;
+    margin-bottom: 15px;
+  }
+  
+  .post-content {
+    font-size: 18px;
+    color: #555;
+    margin-bottom: 15px;
+  }
+  
+  .tags-container {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-bottom: 15px;
+  }
+  
+  .tag {
+    background: #007bff;
+    color: white;
+    padding: 5px 10px;
+    border-radius: 5px;
+    font-size: 14px;
+  }
+  
+  .like-comment-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 15px;
+  }
+  
+  .like-button, .comment-button {
+    background: #007bff;
+    color: white;
+    border: none;
+    padding: 10px 15px;
+    border-radius: 5px;
+    cursor: pointer;
+  }
+  
+  .like-button:hover, .comment-button:hover {
+    background: #0056b3;
+  }
+  
+  .comments-section {
+    margin-top: 20px;
+    width: 100%;
+    max-width: 800px;
+    background: white;
+    padding: 15px;
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  }
+  
+  .comment {
+    border-bottom: 1px solid #ddd;
+    padding: 10px 0;
+    color: #333;
+  }
+  
+  .comment:last-child {
+    border-bottom: none;
+  }
+  
