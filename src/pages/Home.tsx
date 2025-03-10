@@ -8,6 +8,7 @@ import { faImage, faThumbsUp, faComment } from "@fortawesome/free-solid-svg-icon
 import { useForm, FormProvider } from "react-hook-form";
 import AllergiesPreferences from "../components/AllergiesPreferences";
 import { BASE_URL } from "../config/constants";
+import { jwtDecode } from "jwt-decode"; // יש לוודא שהספרייה מותקנת
 
 interface Recipe {
   id: number;
@@ -31,6 +32,9 @@ const Home: FC = () => {
   const methods = useForm();
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const [filterTag, setFilterTag] = useState<string | null>(null);
+  const [showMyPosts, setShowMyPosts] = useState<boolean>(false);
+  const [userId, setUserId] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchRecipes = async (retryCount = 0) => {
@@ -38,14 +42,24 @@ const Home: FC = () => {
         const response = await fetch(`${BASE_URL}/recipe?page=${page}&limit=10`);
         const data = await response.json();
         console.log("Fetched data:", data); // בדוק מה מחזיר ה-API
-        setRecipes(Array.isArray(data.recipes) ? data.recipes : []);
+        let filteredRecipes = Array.isArray(data.recipes) ? data.recipes : [];
+        
+        if (filterTag) {
+            filteredRecipes = filteredRecipes.filter((recipe: Recipe) => recipe.tags?.includes(filterTag));
+        }
+        
+        if (showMyPosts) {
+            filteredRecipes = filteredRecipes.filter((recipe: Recipe) => recipe.owner === userId);
+        }
+        
+        setRecipes(filteredRecipes);
         setTotalPages(data.totalPages || 1);
       } catch (error) {
         console.error("Error fetching recipes:", error);
       }
     };
     fetchRecipes();
-  }, [page]);
+  }, [page, filterTag, showMyPosts]);
     
   const [resetTrigger, setResetTrigger] = useState(false);
 
@@ -63,7 +77,7 @@ const Home: FC = () => {
       console.error("No token found in localStorage.");
       return;
     }
-  
+    
     try {
       const postData = {
         title: trimmedTitle,
@@ -76,19 +90,23 @@ const Home: FC = () => {
         owner: token,
       };
   
+      console.log("Post data being sent:", postData); // Log the post data
+
       const response = await axios.post(
         `${BASE_URL}/recipe/`,
         postData,
         { headers: { "Content-Type": "application/json" } }
       );
   
+      console.log("Response data:", response.data); // Log the response data
+
       setRecipes([response.data, ...recipes]);
       setTitle("");
       setNewPost("");
       setImage(null);
-      setSelectedAllergies([]); // מאפס את האלרגיות הכלליות
+      setSelectedAllergies([]); // Reset the allergies
       methods.reset();
-      setResetTrigger(prev => !prev); // ✅ מפעיל את האיפוס גם בתוך הקומפוננטה של האלרגיות
+      setResetTrigger(prev => !prev); // Trigger reset in the allergies component
   
     } catch (error : any) {
       if (axios.isAxiosError(error) && error.response) {
@@ -128,6 +146,40 @@ const Home: FC = () => {
     }
   };
 
+  const handleDelete = async (recipeId: number) => {
+    try {
+      await axios.delete(`${BASE_URL}/recipe/${recipeId}`);
+      setRecipes((prevRecipes) => prevRecipes.filter((recipe) => recipe.id !== recipeId));
+    } catch (error) {
+      console.error("Error deleting post:", error);
+    }
+  };
+
+  const handleEdit = async (recipeId: number, updatedTitle: string, updatedContent: string, updatedTags: string[]) => {
+    try {
+      const updatedRecipe = {
+        title: updatedTitle,
+        ingredients: JSON.stringify(updatedContent
+          .split("\n")
+          .map(ingredient => ingredient.trim())
+          .filter(ingredient => ingredient)),
+        tags: JSON.stringify(updatedTags) || [],
+      };
+
+      const response = await axios.put(`${BASE_URL}/recipe/${recipeId}`, updatedRecipe, {
+        headers: { "Content-Type": "application/json" },
+      });
+
+      setRecipes((prevRecipes) =>
+        prevRecipes.map((recipe) =>
+          recipe.id === recipeId ? { ...recipe, ...response.data } : recipe
+        )
+      );
+    } catch (error) {
+      console.error("Error editing post:", error);
+    }
+  };
+
   const handlePageChange = (newPage: number) => {
     if (newPage > 0 && newPage <= totalPages) {
       setPage(newPage);
@@ -141,6 +193,28 @@ const Home: FC = () => {
         <main className="feed">
           <h2>Feed</h2>
           {error && <div className="error-message">{error}</div>}
+          <div className="filter-options">
+            <label>
+              Filter by tag:
+              <select onChange={(e) => setFilterTag(e.target.value)} value={filterTag || ""}>
+                <option value="">All</option>
+                <option value="Vegetarian">Vegetarian</option>
+                <option value="Vegan">Vegan</option>
+                <option value="Gluten-Free">Gluten-Free</option>
+                <option value="Lactose-Free">Lactose-Free</option>
+                <option value="Nut Allergy">Nut Allergy</option>
+                <option value="Shellfish Allergy">Shellfish Allergy</option>
+              </select>
+            </label>
+            <label>
+              <input
+                type="checkbox"
+                checked={showMyPosts}
+                onChange={(e) => setShowMyPosts(e.target.checked)}
+              />
+              Show my posts
+            </label>
+          </div>
           <div className="create-post">
             <input
               className="post-title-input"
@@ -208,6 +282,16 @@ const Home: FC = () => {
                     <FontAwesomeIcon icon={faComment} />
                   </button>
                 </div>
+                {recipe.owner === userId && (
+                  <div className="edit-delete-buttons">
+                    <button onClick={() => handleEdit(recipe.id, recipe.title, recipe.ingredients.join("\n"), recipe.tags || [])} className="edit-button">
+                      Edit
+                    </button>
+                    <button onClick={() => handleDelete(recipe.id)} className="delete-button">
+                      Delete
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
           ))}
