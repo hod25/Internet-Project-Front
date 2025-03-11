@@ -36,6 +36,7 @@ const Login: FC = () => {
 
       if (response.data.token) {
         localStorage.setItem("token", response.data.token);
+        localStorage.setItem("userId", response.data.email);
         console.log("Token saved:", localStorage.getItem("token")); // 🔍 בדיקה אם הטוקן נשמר
         navigate("/profile");
       } else {
@@ -44,6 +45,30 @@ const Login: FC = () => {
     } catch (error: any) {
       console.error("Login Error:", error.response?.data?.message || "Login failed");
       setError("password", { message: "Invalid email or password" });
+    }
+  };
+
+  const handleGoogleLogin = async (response: any) => {
+    try {
+      const token = response.credential;
+      if (token) {
+        // שולחים את הטוקן לשרת שלך כדי לקבל את פרטי המשתמש
+        const googleUserResponse = await axios.get(`${BASE_URL}/auth/google-user?token=${token}`);
+        localStorage.setItem("token", token);
+
+        // שומרים את פרטי המשתמש ב-localStorage
+        if (googleUserResponse.data) {
+          localStorage.setItem("userId", googleUserResponse.data.email);
+          console.log("Google User Data saved:", googleUserResponse.data);
+          navigate("/profile");
+        } else {
+          console.error("Failed to fetch user data from server");
+        }
+      } else {
+        console.error("No token received from Google");
+      }
+    } catch (error) {
+      console.error("Google login error:", error);
     }
   };
 
@@ -62,16 +87,7 @@ const Login: FC = () => {
 
         <p>Or login with:</p>
         <GoogleLogin
-          onSuccess={(response) => {
-            const token = response.credential;
-            if (token) {
-              localStorage.setItem("token", token);
-              console.log("Google Token saved:", localStorage.getItem("token")); // 🔍 בדיקה אם הטוקן נשמר
-              navigate("/profile");
-            } else {
-              console.error("No token received from Google");
-            }
-          }}
+          onSuccess={handleGoogleLogin}
           onError={() => console.log("Google Login Error")}
           useOneTap
         />

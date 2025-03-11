@@ -91,12 +91,42 @@ const Home: FC = () => {
       };
   
       console.log("Post data being sent:", postData); // Log the post data
+      var response;
+      try {
+        response = await axios.post(
+            `${BASE_URL}/recipe/`,
+            postData,
+            {
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${token}`  
+                }
+            }
+        );
+      } catch (error: any) {
+          if (error.response && error.response.status === 401) {
+              console.warn("JWT לא תקף, מנסה שוב עם Google Token...");
 
-      const response = await axios.post(
-        `${BASE_URL}/recipe/`,
-        postData,
-        { headers: { "Content-Type": "application/json" } }
-      );
+              try {
+                  response = await axios.post(
+                      `${BASE_URL}/recipe/`,
+                      postData,
+                      {
+                          headers: {
+                              "Content-Type": "application/json",
+                              Authorization: `JWT ${token}`
+                          }
+                      }
+                  );
+              } catch (googleError) {
+                  console.error("ניסיון עם Google Token נכשל:", googleError);
+                  throw googleError; // זריקת השגיאה החוצה אם גם Google נכשל
+              }
+          } else {
+              console.error("שגיאה בשליחת הבקשה:", error);
+              throw error;
+          }
+      }
   
       console.log("Response data:", response.data); // Log the response data
 
