@@ -18,6 +18,8 @@ const Profile: FC = () => {
     const fetchUserProfile = async () => {
       try {
           const token = localStorage.getItem("token"); // Ensure you're using the correct key
+          console.log(token);
+          
           if (!token) {
               console.error("No token found, user might be logged out.");
               return;
