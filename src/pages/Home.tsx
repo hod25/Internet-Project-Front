@@ -11,7 +11,7 @@ import { BASE_URL } from "../config/constants";
 import { jwtDecode } from "jwt-decode"; // יש לוודא שהספרייה מותקנת
 
 interface Recipe {
-  id: number;
+  _id: number;
   title: string;
   image?: string;
   ingredients: string[];
@@ -28,13 +28,15 @@ const Home: FC = () => {
   const [image, setImage] = useState<File | null>(null);
   const [selectedAllergies, setSelectedAllergies] = useState<string[]>([]);
   const [error, setError] = useState<string | null>(null);
-  const [comment, setComment] = useState<string>("");
+  const [comments, setComments] = useState<{ [key: number]: string }>({});
   const methods = useForm();
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [filterTag, setFilterTag] = useState<string | null>(null);
   const [showMyPosts, setShowMyPosts] = useState<boolean>(false);
   const [userId, setUserId] = useState<string | null>(null);
+
+  
 
   useEffect(() => {
     const fetchRecipes = async (retryCount = 0) => {
@@ -60,6 +62,14 @@ const Home: FC = () => {
     };
     fetchRecipes();
   }, [page, filterTag, showMyPosts]);
+
+  const handleCommentChange = (recipeId: number, newComment: string) => {
+    setComments((prevComments) => ({
+      ...prevComments,
+      [recipeId]: newComment,
+    }));
+  };
+  
     
   const [resetTrigger, setResetTrigger] = useState(false);
 
@@ -147,12 +157,16 @@ const Home: FC = () => {
     }
   };  
 
-  const handleLike = async (recipeId: number) => {
+  const handleLike = async (recipeId: number) => {  
+    if (!recipeId) {
+      console.error("Error: recipeId is undefined");
+      return;
+    }
     try {
-      await axios.post(`${BASE_URL}/recipe/${recipeId}/like`);
+      await axios.put(`${BASE_URL}/recipe/like/${recipeId}`);
       setRecipes((prevRecipes) =>
         prevRecipes.map((recipe) =>
-          recipe.id === recipeId ? { ...recipe, likes: recipe.likes + 1 } : recipe
+          recipe._id === recipeId ? { ...recipe, likes: recipe.likes + 1 } : recipe
         )
       );
     } catch (error) {
@@ -161,25 +175,108 @@ const Home: FC = () => {
   };
 
   const handleCommentSubmit = async (recipeId: number) => {
-    if (!comment.trim()) return;
-
+    const commentText = comments[recipeId]?.trim();
+    if (!commentText) return;
+  
+    const token = localStorage.getItem("token");
+    const email = localStorage.getItem("userId");
+  
+    if (!email || !token) {
+      console.error("No email or token found in localStorage.");
+      return;
+    }
+    let postResponse;
     try {
-      await axios.post(`${BASE_URL}/recipe/${recipeId}/comment`, { comment });
-      setRecipes((prevRecipes) =>
-        prevRecipes.map((recipe) =>
-          recipe.id === recipeId ? { ...recipe, comments: [...recipe.comments, comment] } : recipe
-        )
-      );
-      setComment("");
+      // שליחת המייל לשרת על מנת לקבל את מזהה המשתמש
+      const response = await axios.get(`${BASE_URL}/users/${email}`);
+      const userId = response.data[0]._id; // קבלת מזהה המשתמש מהשרת
+
+      try {
+        // שליחת הבקשה עם ה-JWT
+        postResponse = await axios.post(
+          `${BASE_URL}/comments/`,
+          { 
+            comment: commentText,
+            recipeId: recipeId,
+            owner: userId,
+          },
+          {
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+  
+        setRecipes((prevRecipes) =>
+          prevRecipes.map((recipe) =>
+            recipe._id === recipeId
+              ? {
+                  ...recipe,
+                  comments: Array.isArray(recipe.comments) 
+                    ? [...recipe.comments, commentText] 
+                    : [commentText], // אם comments לא מערך, ניצור מערך חדש
+              }
+              : recipe
+          )
+        );
+        
+  
+        setComments((prevComments) => ({
+          ...prevComments,
+          [recipeId]: "", // Reset comment after submission
+        }));
+  
+      } catch (error: any) {
+        if (error.response && error.response.status === 401) {
+          console.warn("JWT לא תקף, מנסה שוב עם Google Token...");
+  
+          try {
+            postResponse = await axios.post(
+              `${BASE_URL}/comments/`,
+              { 
+                comment: commentText,
+                recipe: recipeId,
+                owner: userId,
+              },
+              {
+                headers: {
+                  "Content-Type": "application/json",
+                  Authorization: `JWT ${token}`,
+                },
+              }
+            );
+  
+            setRecipes((prevRecipes) =>
+              prevRecipes.map((recipe) =>
+                recipe._id === recipeId
+                  ? { ...recipe, comments: [...recipe.comments, commentText] }
+                  : recipe
+              )
+            );
+  
+            setComments((prevComments) => ({
+              ...prevComments,
+              [recipeId]: "", // Reset comment after submission
+            }));
+          } catch (googleError) {
+            console.error("ניסיון עם Google Token נכשל:", googleError);
+          }
+        } else {
+          console.error("Error commenting on post:", error);
+        }
+      }
     } catch (error) {
-      console.error("Error commenting on post:", error);
+      console.error("Error retrieving user id:", error);
     }
   };
+  
+
 
   const handleDelete = async (recipeId: number) => {
     try {
       await axios.delete(`${BASE_URL}/recipe/${recipeId}`);
-      setRecipes((prevRecipes) => prevRecipes.filter((recipe) => recipe.id !== recipeId));
+      setRecipes((prevRecipes) => prevRecipes.filter((recipe) => recipe._id !== recipeId));
     } catch (error) {
       console.error("Error deleting post:", error);
     }
@@ -202,7 +299,7 @@ const Home: FC = () => {
 
       setRecipes((prevRecipes) =>
         prevRecipes.map((recipe) =>
-          recipe.id === recipeId ? { ...recipe, ...response.data } : recipe
+          recipe._id === recipeId ? { ...recipe, ...response.data } : recipe
         )
       );
     } catch (error) {
@@ -284,7 +381,7 @@ const Home: FC = () => {
           </div>
           
           {recipes.map((recipe) => (
-            <div key={recipe.id} className="post">
+            <div key={recipe._id} className="post">
               <h3>{recipe.title}</h3>
               {recipe.image && <img src={`${BASE_URL}/${recipe.image}`} alt="Post" className="post-image" />}
               <div className="tags">
@@ -297,27 +394,27 @@ const Home: FC = () => {
                 )}
               </div>
               <div className="post-actions">
-                <button onClick={() => handleLike(recipe.id)} className="like-button">
+                <button onClick={() => handleLike(recipe._id)} className="like-button">
                   <FontAwesomeIcon icon={faThumbsUp} /> {recipe.likes}
                 </button>
                 <div className="comments-section">
-                  <input
-                    type="text"
-                    placeholder="Add a comment..."
-                    value={comment}
-                    onChange={(e) => setComment(e.target.value)}
-                    className="comment-input"
-                  />
-                  <button onClick={() => handleCommentSubmit(recipe.id)} className="comment-button">
+                <input
+                  type="text"
+                  placeholder="Add a comment..."
+                  value={comments[recipe._id] || ""}
+                  onChange={(e) => handleCommentChange(recipe._id, e.target.value)}
+                  className="comment-input"
+                />
+                  <button onClick={() => handleCommentSubmit(recipe._id)} className="comment-button">
                     <FontAwesomeIcon icon={faComment} />
                   </button>
                 </div>
                 {recipe.owner === userId && (
                   <div className="edit-delete-buttons">
-                    <button onClick={() => handleEdit(recipe.id, recipe.title, recipe.ingredients.join("\n"), recipe.tags || [])} className="edit-button">
+                    <button onClick={() => handleEdit(recipe._id, recipe.title, recipe.ingredients.join("\n"), recipe.tags || [])} className="edit-button">
                       Edit
                     </button>
-                    <button onClick={() => handleDelete(recipe.id)} className="delete-button">
+                    <button onClick={() => handleDelete(recipe._id)} className="delete-button">
                       Delete
                     </button>
                   </div>
