@@ -5,7 +5,6 @@ import { Link } from "react-router-dom";
 import Sidebar from "../components/Sidebar";
 import axios from "axios";
 import { BASE_URL } from "../config/constants";
-import { log } from "console";
 
 const Profile: FC = () => {
   const [user, setUser] = useState<{ name: string; background: string; tags: { name: string }[]; img?: string }>({

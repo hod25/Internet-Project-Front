@@ -1,6 +1,4 @@
 import { FC, useEffect, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import "../styles/Home.css";
 import axios from "axios";
 import Sidebar from "../components/Sidebar"; 
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -8,7 +6,6 @@ import { faImage, faThumbsUp, faComment } from "@fortawesome/free-solid-svg-icon
 import { useForm, FormProvider } from "react-hook-form";
 import AllergiesPreferences from "../components/AllergiesPreferences";
 import { BASE_URL } from "../config/constants";
-import { jwtDecode } from "jwt-decode"; // יש לוודא שהספרייה מותקנת
 
 interface Recipe {
   _id: number;
@@ -27,19 +24,18 @@ const Home: FC = () => {
   const [title, setTitle] = useState("");
   const [image, setImage] = useState<File | null>(null);
   const [selectedAllergies, setSelectedAllergies] = useState<string[]>([]);
-  const [error, setError] = useState<string | null>(null);
   const [comments, setComments] = useState<{ [key: number]: string }>({});
   const methods = useForm();
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [filterTag, setFilterTag] = useState<string | null>(null);
   const [showMyPosts, setShowMyPosts] = useState<boolean>(false);
-  const [userId, setUserId] = useState<string | null>(null);
+  const [userId] = useState<string | null>(null);
 
   
 
   useEffect(() => {
-    const fetchRecipes = async (retryCount = 0) => {
+    const fetchRecipes = async () => {
       try {
         const response = await fetch(`${BASE_URL}/recipe?page=${page}&limit=10`);
         const data = await response.json();
@@ -185,7 +181,6 @@ const Home: FC = () => {
       console.error("No email or token found in localStorage.");
       return;
     }
-    let postResponse;
     try {
       // שליחת המייל לשרת על מנת לקבל את מזהה המשתמש
       const response = await axios.get(`${BASE_URL}/users/${email}`);
@@ -193,7 +188,7 @@ const Home: FC = () => {
 
       try {
         // שליחת הבקשה עם ה-JWT
-        postResponse = await axios.post(
+        await axios.post(
           `${BASE_URL}/comments/`,
           { 
             comment: commentText,
@@ -232,7 +227,7 @@ const Home: FC = () => {
           console.warn("JWT לא תקף, מנסה שוב עם Google Token...");
   
           try {
-            postResponse = await axios.post(
+            await axios.post(
               `${BASE_URL}/comments/`,
               { 
                 comment: commentText,
@@ -319,7 +314,6 @@ const Home: FC = () => {
         <Sidebar />  
         <main className="feed">
           <h2>Feed</h2>
-          {error && <div className="error-message">{error}</div>}
           <div className="filter-options">
             <label>
               Filter by tag:

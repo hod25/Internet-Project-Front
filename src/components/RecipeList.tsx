@@ -8,7 +8,11 @@ const PostsList: FC = () => {
         <div>
             {isLoading && <p>Loading...</p>}
             {error && <p>{error}</p>}
-            <ItemsList title="Posts" items={posts.map((post) => post.title)} onItemSelected={(index) => { console.log("Selected " + index) }} />
+            <ItemsList 
+              title="Posts" 
+              items={posts.map((post) => String(post.title))} 
+              onItemSelected={(index) => { console.log("Selected " + index) }} 
+            />
         </div>
     )
 }

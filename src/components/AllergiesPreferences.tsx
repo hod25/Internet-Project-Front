@@ -1,4 +1,4 @@
-import React, { FC, useState, useEffect, ReactNode } from "react";
+import { FC, useState, useEffect } from "react";
 import { useFormContext } from "react-hook-form";
 
 interface AllergiesPreferencesProps {
