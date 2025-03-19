@@ -9,6 +9,8 @@ import { useForm, FormProvider } from "react-hook-form";
 import AllergiesPreferences from "../components/AllergiesPreferences";
 import { BASE_URL } from "../config/constants";
 import { jwtDecode } from "jwt-decode"; // יש לוודא שהספרייה מותקנת
+import { log } from "console";
+//import RecipeComments from './Comments';
 
 interface Recipe {
   _id: number;
@@ -28,14 +30,16 @@ const Home: FC = () => {
   const [image, setImage] = useState<File | null>(null);
   const [selectedAllergies, setSelectedAllergies] = useState<string[]>([]);
   const [error, setError] = useState<string | null>(null);
-  const [comments, setComments] = useState<{ [key: number]: string }>({});
+  const [comments, setComments] = useState<{ [key: string]: string[] }>({});
   const methods = useForm();
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [filterTag, setFilterTag] = useState<string | null>(null);
   const [showMyPosts, setShowMyPosts] = useState<boolean>(false);
-  const [userId, setUserId] = useState<string | null>(null);
-
+  //const [userId, setUserId] = useState<string | null>(null);
+  const userId = localStorage.getItem('userId')||""; // שליפת ה-userId מה-LocalStorage
+  const [userNames, setUserNames] = useState<{ [key: string]: string }>({});  // מאגר שמות המשתמשים
+  const [newComment, setNewComment] = useState<string>('');
   
 
   useEffect(() => {
@@ -45,6 +49,10 @@ const Home: FC = () => {
         const data = await response.json();
         console.log("Fetched data:", data); // בדוק מה מחזיר ה-API
         let filteredRecipes = Array.isArray(data.recipes) ? data.recipes : [];
+
+        filteredRecipes.forEach((recipe:Recipe) => {
+          console.log(`${BASE_URL}/${recipe.image}`); // בדיקה אם הכתובת של התמונה מגיעה נכון
+        });
         
         if (filterTag) {
             filteredRecipes = filteredRecipes.filter((recipe: Recipe) => recipe.tags?.includes(filterTag));
@@ -63,12 +71,36 @@ const Home: FC = () => {
     fetchRecipes();
   }, [page, filterTag, showMyPosts]);
 
-  const handleCommentChange = (recipeId: number, newComment: string) => {
-    setComments((prevComments) => ({
-      ...prevComments,
-      [recipeId]: newComment,
-    }));
+  useEffect(() => {
+    // עבור כל מתכון, נבצע את הקריאה ל-fetchComments
+    recipes.forEach(recipe => {
+      fetchComments(recipe._id); // שליפת התגובות עבור המתכון הזה
+    });
+  }, [recipes]);  // קריאה פעם אחת לאחר שהמתכונים נטענו
+
+
+  const handleCommentChange = (e : string) => {
+    // הוספת התו החדש לתגובה הקודמת
+    setNewComment(e);
   };
+
+  useEffect(() => {
+    if (userId) {
+      const fetchUserName = async (userId: string) => {
+        try {
+          const response = await axios.get(`${BASE_URL}/users/${userId}`);
+          setUserNames(prevUserNames => ({
+            ...prevUserNames,
+            [userId]: `${response.data.name} ${response.data.last_name}`,  // מניח ששם המשתמש נמצא בשדות "name" ו-"last_name"
+          }));
+        } catch (error) {
+          setError('Failed to fetch user name');
+        }
+      };
+
+      fetchUserName(userId);
+    }
+  }, [userId]);
   
     
   const [resetTrigger, setResetTrigger] = useState(false);
@@ -78,31 +110,67 @@ const Home: FC = () => {
     const trimmedPost = newPost.trim();
   
     if (!trimmedTitle || (!trimmedPost && !image)) {
-      console.error("Title and either post content or image are required.");
+      alert("Title and either post content or image are required.");
       return;
     }
 
     const token = localStorage.getItem("token");
-    if (!token) {
-      console.error("No token found in localStorage.");
+    const email = localStorage.getItem("userId");
+  
+    if (!email || !token) {
+      console.error("No email or token found in localStorage.");
+      return;
+    }
+
+    let userId = ""
+
+    try {
+      // שליחת המייל לשרת על מנת לקבל את מזהה המשתמש
+        const response = await axios.get(`${BASE_URL}/users/${email}`);
+        userId = response.data[0]._id; // קבלת מזהה המשתמש מהשרת
+
+      if (!token) {
+        console.error("No token found in localStorage.");
+        return;
+      }
+    }catch {
+      console.log("User id not found");
       return;
     }
     
     try {
-      const postData = {
-        title: trimmedTitle,
-        ingredients: JSON.stringify(trimmedPost
+      let postData = new FormData();
+      let imageUri=""
+
+      if (image) {
+        postData.append("image", image);
+        response = await axios.post(
+          `${BASE_URL}/recipe/upload/`,
+          postData,
+          {
+              headers: {
+                  "Content-Type": "multipart/form-data" 
+              }
+          }
+        );
+        if (response.status==200)
+          imageUri = response.data.url.replace(/\\/g, "/")
+      }
+
+      postData = new FormData()
+      postData.append("title", trimmedTitle);
+      postData.append("ingredients", JSON.stringify(trimmedPost
           .split("\n")
           .map(ingredient => ingredient.trim())
-          .filter(ingredient => ingredient)),
-        tags: JSON.stringify(selectedAllergies) || [],
-        likes: 0,
-        owner: token,
-      };
-  
-      console.log("Post data being sent:", postData); // Log the post data
+          .filter(ingredient => ingredient)));
+      postData.append("tags", selectedAllergies.length > 0 ? JSON.stringify(selectedAllergies) : JSON.stringify([]));
+      postData.append("likes", "0");
+      postData.append("owner", userId);
+      postData.append("image", imageUri)
+      
       var response;
       try {
+
         response = await axios.post(
             `${BASE_URL}/recipe/`,
             postData,
@@ -113,6 +181,8 @@ const Home: FC = () => {
                 }
             }
         );
+        console.log(response);
+        
       } catch (error: any) {
           if (error.response && error.response.status === 401) {
               console.warn("JWT לא תקף, מנסה שוב עם Google Token...");
@@ -155,7 +225,83 @@ const Home: FC = () => {
         console.error("An error occurred:", error.message);
       }
     }
-  };  
+  }; 
+
+  const createRandomRecipe = async () => {
+    var response;
+
+    try {
+      const token = localStorage.getItem("token");
+      response = await axios.get(`${BASE_URL}/users/${userId}`);
+      let Id :string = response.data[0]._id; // קבלת מזהה המשתמש מהשרת
+      
+      try {
+        response = await axios.post(
+            `${BASE_URL}/recipe/random`,
+            { owner: Id },
+            {
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${token}`  
+                }
+            }
+        );
+      } catch (error: any) {
+          if (error.response && error.response.status === 401) {
+              console.warn("JWT לא תקף, מנסה שוב עם Google Token...");
+
+              try {
+                  response = await axios.post(
+                      `${BASE_URL}/recipe/random`,
+                      { owner: Id },
+                      {
+                          headers: {
+                              "Content-Type": "application/json",
+                              Authorization: `JWT ${token}`
+                          }
+                      }
+                  );
+              } catch (googleError) {
+                  console.error("ניסיון עם Google Token נכשל:", googleError);
+                  throw googleError; // זריקת השגיאה החוצה אם גם Google נכשל
+              }
+          } else {
+              console.error("שגיאה בשליחת הבקשה:", error);
+              throw error;
+          }
+      }
+      const randomRecipe = response.data;
+  
+      if (randomRecipe) {
+        setRecipes((prevRecipes) => [randomRecipe, ...prevRecipes]);
+      }
+    } catch (error) {
+      console.error("Error fetching random recipe:", error);
+    }
+  };
+  
+
+  const fetchComments = async (recipeId: number) => {
+    try {
+      const response = await axios.get(`${BASE_URL}/comments/recipe/${recipeId}`);
+      const commentsWithUserNames = await Promise.all(response.data.map(async (comment: any) => {
+        // שליפת שם המשתמש לפי ה-ID של ה-owner
+        const userResponse = await axios.get(`${BASE_URL}/users/id/${comment.owner}`);
+        
+        return {
+          ...comment,
+          ownerName: `${userResponse.data.name} ${userResponse.data.last_name}`,  // שמירה של שם המשתמש עם התגובה
+        };
+      }));
+
+      setComments((prevComments) => ({
+        ...prevComments,
+        [recipeId]: commentsWithUserNames,
+      }));
+    } catch (error) {
+      setError('Failed to fetch comments');
+    }
+  };
 
   const handleLike = async (recipeId: number) => {  
     if (!recipeId) {
@@ -175,7 +321,8 @@ const Home: FC = () => {
   };
 
   const handleCommentSubmit = async (recipeId: number) => {
-    const commentText = comments[recipeId]?.trim();
+    const commentText = newComment;
+    
     if (!commentText) return;
   
     const token = localStorage.getItem("token");
@@ -189,8 +336,9 @@ const Home: FC = () => {
     try {
       // שליחת המייל לשרת על מנת לקבל את מזהה המשתמש
       const response = await axios.get(`${BASE_URL}/users/${email}`);
-      const userId = response.data[0]._id; // קבלת מזהה המשתמש מהשרת
-
+      let userId :string = response.data[0]._id; // קבלת מזהה המשתמש מהשרת
+      //userId=userId.replace("=","");
+      
       try {
         // שליחת הבקשה עם ה-JWT
         postResponse = await axios.post(
@@ -224,7 +372,7 @@ const Home: FC = () => {
   
         setComments((prevComments) => ({
           ...prevComments,
-          [recipeId]: "", // Reset comment after submission
+          [recipeId]: [], 
         }));
   
       } catch (error: any) {
@@ -257,8 +405,9 @@ const Home: FC = () => {
   
             setComments((prevComments) => ({
               ...prevComments,
-              [recipeId]: "", // Reset comment after submission
+              [recipeId]: [], // Reset comment after submission
             }));
+            fetchComments(recipeId);
           } catch (googleError) {
             console.error("ניסיון עם Google Token נכשל:", googleError);
           }
@@ -270,8 +419,20 @@ const Home: FC = () => {
       console.error("Error retrieving user id:", error);
     }
   };
-  
 
+  const setFileToImage = async (e: React.ChangeEvent<HTMLInputElement>) => {
+      const selectedFile = e.target.files?.[0];
+
+    if (selectedFile) {
+      const validImageTypes = ["image/jpeg", "image/png", "image/gif", "image/webp"];
+      if (!validImageTypes.includes(selectedFile.type)) {
+        alert("Invalid file type! Please select an image (JPEG, PNG, GIF, WebP).");
+        return;
+      }
+
+      setImage(selectedFile)
+    }
+  };
 
   const handleDelete = async (recipeId: number) => {
     try {
@@ -316,12 +477,12 @@ const Home: FC = () => {
   return (
     <FormProvider {...methods}>
       <div className="home-container">
-        <Sidebar />  
+        <Sidebar />
         <main className="feed">
           <h2>Feed</h2>
-          {error && <div className="error-message">{error}</div>}
+          {error && error !== "Failed to fetch comments" && <div className="error-message">{error}</div>}
           <div className="filter-options">
-            <label>
+          <label>
               Filter by tag:
               <select onChange={(e) => setFilterTag(e.target.value)} value={filterTag || ""}>
                 <option value="">All</option>
@@ -344,46 +505,60 @@ const Home: FC = () => {
           </div>
           <div className="create-post">
             <input
-              className="post-title-input"
-              placeholder="Enter recipe title..."
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-            />
-            <textarea
-              className="post-input"
-              placeholder="Write your recipe here..."
-              value={newPost}
-              onChange={(e) => setNewPost(e.target.value)}
-            />
-            <label className="image-upload-label">
-              <FontAwesomeIcon icon={faImage} className="image-upload-icon" />
-              <input
-                type="file"
-                accept="image/*"
-                onChange={(e) => setImage(e.target.files?.[0] || null)}
-                className="hidden-image-input"
+                className="post-title-input"
+                placeholder="Enter recipe title..."
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
               />
-            </label>
-            <label>Allergies/Preferences:</label>
-            <AllergiesPreferences
-              options={[
-                "Vegetarian",
-                "Vegan",
-                "Gluten-Free",
-                "Lactose-Free",
-                "Nut Allergy",
-                "Shellfish Allergy"
-              ]}
-              onChange={setSelectedAllergies}
-              resetTrigger={resetTrigger} // 🔹 מעביר את הפרופ החדש
-            />
-            <button onClick={handlePostSubmit} className="post-button">Post</button>
+              <textarea
+                className="post-input"
+                placeholder="Write your recipe here..."
+                value={newPost}
+                onChange={(e) => setNewPost(e.target.value)}
+              />
+              <label className="image-upload-label">
+                <FontAwesomeIcon icon={faImage} className="image-upload-icon" />
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => {setFileToImage(e)} }
+                  className="hidden-image-input"
+                />
+              </label>
+              <label>Tags:</label>
+              <AllergiesPreferences
+                options={[
+                  "Vegetarian",
+                  "Vegan",  
+                  "Gluten-Free",
+                  "Lactose-Free",
+                  "Nut Allergy",
+                  "Shellfish Allergy",
+                ]}
+                onChange={setSelectedAllergies}
+                resetTrigger={resetTrigger}
+              />
+              <button onClick={handlePostSubmit} className="post-button">Post</button>
+              <button onClick={createRandomRecipe} className="surprise-button">
+                Surprise Me!
+              </button>
           </div>
-          
+
           {recipes.map((recipe) => (
             <div key={recipe._id} className="post">
               <h3>{recipe.title}</h3>
-              {recipe.image && <img src={`${BASE_URL}/${recipe.image}`} alt="Post" className="post-image" />}
+              {recipe.image && <img src={
+                recipe.image.startsWith("http") // אם זה כבר URL מלא (התחיל ב-http)
+                    ? recipe.image // השתמש בקישור המלא
+                    : `${BASE_URL}/${recipe.image}` // אחרת, השתמש ב-BASE_URL של השרת
+                } 
+                alt="Post" className="post-image" />}
+              <h4 className="ingredients-title">Ingredients:</h4>
+              <ul className="ingredients-list">
+                {recipe.ingredients.map((ingredient, index) => (
+                  <li key={index}>{ingredient}</li>
+                ))}
+              </ul>              
               <div className="tags">
                 {recipe.tags && recipe.tags.length ? (
                   recipe.tags.map((tag, index) => (
@@ -398,16 +573,33 @@ const Home: FC = () => {
                   <FontAwesomeIcon icon={faThumbsUp} /> {recipe.likes}
                 </button>
                 <div className="comments-section">
-                <input
-                  type="text"
-                  placeholder="Add a comment..."
-                  value={comments[recipe._id] || ""}
-                  onChange={(e) => handleCommentChange(recipe._id, e.target.value)}
-                  className="comment-input"
-                />
+                  {/* Input לשליחת תגובה */}
+                  <input
+                    type="text"
+                    placeholder="Add a comment..."
+                    //value={comments[recipe._id] || ""}
+                    onChange={(e) => handleCommentChange(e.target.value)}
+                    className="comment-input"
+                  />
                   <button onClick={() => handleCommentSubmit(recipe._id)} className="comment-button">
                     <FontAwesomeIcon icon={faComment} />
                   </button>
+                  <div className="comments-list">
+                    {Array.isArray(comments[recipe._id]) && comments[recipe._id].length > 0 ? (
+                      comments[recipe._id].map((comment: any, index: number) => (
+                        <p key={index}>
+                          <div className="comment-header">
+                            <span className="comment-owner">{comment.ownerName}</span>
+                          </div>
+                          <p className="comment-text">{comment.comment}</p>
+                        </p>
+                      ))
+                    ) : (
+                      <p>No comments yet...</p>
+                    )}
+                  </div>
+
+
                 </div>
                 {recipe.owner === userId && (
                   <div className="edit-delete-buttons">
@@ -422,6 +614,7 @@ const Home: FC = () => {
               </div>
             </div>
           ))}
+
           <div className="pagination">
             <button onClick={() => handlePageChange(page - 1)} disabled={page === 1}>
               Previous

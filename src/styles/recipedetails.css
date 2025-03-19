@@ -77,8 +77,8 @@
   
   .comments-section {
     margin-top: 20px;
+    margin-right: 0px;
     width: 100%;
-    max-width: 800px;
     background: white;
     padding: 15px;
     border-radius: 10px;
@@ -94,4 +94,6 @@
   .comment:last-child {
     border-bottom: none;
   }
-  
+  .post {
+    background: #ece8f3;
+  }

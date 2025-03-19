@@ -10,6 +10,10 @@
   font-family: 'Arial', sans-serif;
 }
 
+.tag {
+  margin-right: 5px;
+}
+
 .sidebar {
   width: 200px;
   background: white;
@@ -48,7 +52,7 @@
 }
 
 .post {
-  background: #e3e3e3;
+  background: #a095a3;
   padding: 15px;
   border-radius: 10px;
   margin-bottom: 10px;
@@ -172,4 +176,78 @@
   text-align: left;
   border-bottom: 2px solid #007bff;
   padding-bottom: 5px;
+}
+
+.comments-container {
+  margin-top: 20px;
+  padding: 10px;
+  border-radius: 8px;
+  background: #f9f9f9;
+}
+
+.comment {
+  padding: 10px;
+  margin-bottom: 8px;
+  background: white;
+  border-radius: 6px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.comment-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 14px;
+  font-weight: bold;
+  color: #333;
+  margin-top: "20px";
+}
+
+.comment-owner {
+  color: #007bff;
+}
+
+.comment-date {
+  font-size: 12px;
+  color: #666;
+}
+
+.comment-text {
+  margin-top: 5px;
+  font-size: 15px;
+  color: #444;
+}
+
+.comments-list {  
+  margin-top: 30px;
+}
+
+.ingredients-list {
+  list-style-type: disc;
+  padding-left: 20px;
+  margin-top: 10px;
+  font-size: 16px;
+  color: #552fc5;
+}
+
+.ingredients-list li {
+  margin-bottom: 5px;
+}
+
+.ingredients-title {
+  color: #007bff;
+}
+
+.surprise-button {
+  background-color: #ff9800;
+  color: white;
+  border: none;
+  padding: 10px 15px;
+  margin-top: 10px;
+  cursor: pointer;
+  border-radius: 5px;
+}
+
+.surprise-button:hover {
+  background-color: #e68900;
 }
