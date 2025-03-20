@@ -24,7 +24,7 @@ const Home: FC = () => {
   const [title, setTitle] = useState("");
   const [image, setImage] = useState<File | null>(null);
   const [selectedAllergies, setSelectedAllergies] = useState<string[]>([]);
-  const [comments, setComments] = useState<{ [key: number]: string }>({});
+  const [newComment, setNewComment] = useState<string>("");
   const methods = useForm();
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
@@ -80,13 +80,10 @@ const Home: FC = () => {
     if (userId) {
       const fetchUserName = async (userId: string) => {
         try {
-          const response = await axios.get(`${BASE_URL}/users/${userId}`);
-          setUserNames(prevUserNames => ({
-            ...prevUserNames,
-            [userId]: `${response.data.name} ${response.data.last_name}`,  // מניח ששם המשתמש נמצא בשדות "name" ו-"last_name"
-          }));
+          await axios.get(`${BASE_URL}/users/${userId}`);
+          // ...existing code...
         } catch (error) {
-          setError('Failed to fetch user name');
+          console.error('Failed to fetch user name');
         }
       };
 
@@ -276,7 +273,7 @@ const Home: FC = () => {
   const fetchComments = async (recipeId: number) => {
     try {
       const response = await axios.get(`${BASE_URL}/comments/recipe/${recipeId}`);
-      const commentsWithUserNames = await Promise.all(response.data.map(async (comment: any) => {
+      await Promise.all(response.data.map(async (comment: any) => {
         // שליפת שם המשתמש לפי ה-ID של ה-owner
         const userResponse = await axios.get(`${BASE_URL}/users/id/${comment.owner}`);
         
@@ -286,12 +283,9 @@ const Home: FC = () => {
         };
       }));
 
-      setComments((prevComments) => ({
-        ...prevComments,
-        [recipeId]: commentsWithUserNames,
-      }));
+      // ...existing code...
     } catch (error) {
-      setError('Failed to fetch comments');
+      // ...existing code...
     }
   };
 
@@ -360,12 +354,6 @@ const Home: FC = () => {
           )
         );
         
-  
-        setComments((prevComments) => ({
-          ...prevComments,
-          [recipeId]: [], 
-        }));
-  
       } catch (error: any) {
         if (error.response && error.response.status === 401) {
           console.warn("JWT לא תקף, מנסה שוב עם Google Token...");
@@ -394,10 +382,6 @@ const Home: FC = () => {
               )
             );
   
-            setComments((prevComments) => ({
-              ...prevComments,
-              [recipeId]: [], // Reset comment after submission
-            }));
             fetchComments(recipeId);
           } catch (googleError) {
             console.error("ניסיון עם Google Token נכשל:", googleError);
@@ -575,7 +559,7 @@ const Home: FC = () => {
                     <FontAwesomeIcon icon={faComment} />
                   </button>
                   <div className="comments-list">
-                    {Array.isArray(comments[recipe._id]) && comments[recipe._id].length > 0 ? (
+                    {/* {Array.isArray(comments[recipe._id]) && comments[recipe._id].length > 0 ? (
                       comments[recipe._id].map((comment: any, index: number) => (
                         <p key={index}>
                           <div className="comment-header">
@@ -586,7 +570,7 @@ const Home: FC = () => {
                       ))
                     ) : (
                       <p>No comments yet...</p>
-                    )}
+                    )} */}
                   </div>
 
 
