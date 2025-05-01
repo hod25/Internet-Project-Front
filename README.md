@@ -1,4 +1,4 @@
-﻿# Internet-Project-Frontend
+# RESTful API Project
 
 A modern frontend application built with TypeScript and Vite, designed to complement the backend Internet Project.​
 
